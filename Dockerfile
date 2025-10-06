@@ -33,12 +33,12 @@ ENV EASYPANEL=True
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Expõe a porta 8000 (interna) - Easypanel mapeará para 8005
-EXPOSE 8000
+# Expõe a porta 8005 (interna e externa)
+EXPOSE 8005
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost:8005/ || exit 1
 
 # Comando para produção com script de inicialização
 ENTRYPOINT ["/app/entrypoint.sh"]

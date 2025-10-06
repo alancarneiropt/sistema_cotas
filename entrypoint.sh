@@ -35,5 +35,5 @@ echo "🔍 Verificação final..."
 python manage.py check
 
 # Executar o servidor
-echo "🌐 Iniciando servidor na porta 8000..."
-exec gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 --access-logfile - --error-logfile - sistema_cotas.wsgi:application
+echo "🌐 Iniciando servidor na porta 8005..."
+exec gunicorn --bind 0.0.0.0:8005 --workers 3 --timeout 120 --access-logfile - --error-logfile - sistema_cotas.wsgi:application
