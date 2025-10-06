@@ -9,6 +9,7 @@ RUN apt-get update \
         postgresql-client \
         build-essential \
         libpq-dev \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copia e instala dependências Python
@@ -21,8 +22,19 @@ COPY . .
 # Cria diretórios necessários
 RUN mkdir -p logs media staticfiles
 
-# Expõe a porta
+# Configura variáveis de ambiente
+ENV PYTHONPATH=/app
+ENV DJANGO_SETTINGS_MODULE=sistema_cotas.settings
+
+# Coleta arquivos estáticos
+RUN python manage.py collectstatic --noinput
+
+# Expõe a porta 8000 (interna) - Easypanel mapeará para 8005
 EXPOSE 8000
 
-# Comando padrão
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
+
+# Comando para produção com Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120", "sistema_cotas.wsgi:application"]

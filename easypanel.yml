@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  sistema-cotas:
+    build: .
+    ports:
+      - "8005:8000"
+    environment:
+      - DEBUG=False
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+      - DATABASE_URL=sqlite:///db.sqlite3
+      - SECRET_KEY=${SECRET_KEY}
+      - TIME_ZONE=Europe/Lisbon
+      - LANGUAGE_CODE=pt-br
+    volumes:
+      - ./media:/app/media
+      - ./static:/app/static
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./media:/app/media
+      - ./static:/app/static
+    depends_on:
+      - sistema-cotas
+    restart: unless-stopped
+
+volumes:
+  media:
+  static:
+  logs:

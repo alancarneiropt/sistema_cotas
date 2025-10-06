@@ -315,6 +315,14 @@ python manage.py test
 
 ## 🚀 Deploy em Produção
 
+### 🎯 Easypanel (Recomendado)
+```bash
+# Configurar para Easypanel na porta 8005
+python deploy_easypanel.py
+
+# Seguir guia: DEPLOY_EASYPANEL.md
+```
+
 ### Configurações de Segurança
 
 1. **SECRET_KEY**: Use uma chave secreta forte
