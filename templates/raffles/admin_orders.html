@@ -1,0 +1,244 @@
+{% extends 'raffles/base_admin.html' %}
+{% load static %}
+
+{% block title %}
+  Gerenciar Pedidos - Sistema de Cotas
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid py-4">
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1 class="h2 mb-0">
+          <i class="bi bi-cart"></i>
+          Gerenciar Pedidos
+        </h1>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+      <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card text-white bg-primary">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h4>{{ orders_stats.total|default:0 }}</h4>
+                <p class="mb-0">Total de Pedidos</p>
+              </div>
+              <div class="align-self-center">
+                <i class="bi bi-cart display-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card text-white bg-success">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h4>{{ orders_stats.confirmed|default:0 }}</h4>
+                <p class="mb-0">Confirmados</p>
+              </div>
+              <div class="align-self-center">
+                <i class="bi bi-check-circle display-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card text-white bg-warning">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h4>{{ orders_stats.pending|default:0 }}</h4>
+                <p class="mb-0">Pendentes</p>
+              </div>
+              <div class="align-self-center">
+                <i class="bi bi-clock display-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card text-white bg-danger">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h4>{{ orders_stats.expired|default:0 }}</h4>
+                <p class="mb-0">Expirados</p>
+              </div>
+              <div class="align-self-center">
+                <i class="bi bi-x-circle display-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <form method="get" class="row g-3">
+              <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                  <option value="">Todos os status</option>
+                  <option value="reservado" {% if status_filter == 'reservado' %}selected{% endif %}>Reservado</option>
+                  <option value="aguardando_comprovante" {% if status_filter == 'aguardando_comprovante' %}selected{% endif %}>Aguardando Comprovante</option>
+                  <option value="aguardando_confirmacao" {% if status_filter == 'aguardando_confirmacao' %}selected{% endif %}>Aguardando Confirmação</option>
+                  <option value="confirmado" {% if status_filter == 'confirmado' %}selected{% endif %}>Confirmado</option>
+                  <option value="cancelado" {% if status_filter == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                  <option value="expirado" {% if status_filter == 'expirado' %}selected{% endif %}>Expirado</option>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <label for="product" class="form-label">Produto</label>
+                <select name="product" id="product" class="form-select">
+                  <option value="">Todos os produtos</option>
+                  {% for product in products %}
+                    <option value="{{ product.id }}" {% if product_filter == product.id|stringformat:"s" %}selected{% endif %}>
+                      {{ product.title }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              
+              <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                  <i class="bi bi-search"></i>
+                  Filtrar
+                </button>
+                <a href="{% url 'raffles:admin_orders' %}" class="btn btn-outline-secondary">
+                  <i class="bi bi-x-circle"></i>
+                  Limpar
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Lista de Pedidos</h5>
+          </div>
+          <div class="card-body">
+            {% if orders %}
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Cliente</th>
+                      <th>Produto</th>
+                      <th>Quantidade</th>
+                      <th>Status</th>
+                      <th>Valor</th>
+                      <th>Data</th>
+                      <th>Expira em</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for order in orders %}
+                      <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>
+                          <div>
+                            <strong>{{ order.full_name }}</strong>
+                            {% if order.email %}
+                              <br><small class="text-muted">{{ order.email }}</small>
+                            {% endif %}
+                            {% if order.whatsapp %}
+                              <br><small class="text-muted">{{ order.whatsapp }}</small>
+                            {% endif %}
+                          </div>
+                        </td>
+                        <td>{{ order.product.title }}</td>
+                        <td>{{ order.quantity }} cota{{ order.quantity|pluralize }}</td>
+                        <td>
+                          <span class="badge bg-{% if order.status == 'confirmado' %}success{% elif order.status == 'cancelado' %}danger{% elif order.status == 'expirado' %}secondary{% else %}warning{% endif %}">
+                            {{ order.get_status_display }}
+                          </span>
+                        </td>
+                        <td>{{ order.total_price_display }}</td>
+                        <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                        <td>
+                          {% if order.reserve_expires_at %}
+                            {{ order.reserve_expires_at|date:"d/m/Y H:i" }}
+                            {% if order.is_expired %}
+                              <br><small class="text-danger">Expirado</small>
+                            {% endif %}
+                          {% else %}
+                            -
+                          {% endif %}
+                        </td>
+                        <td>
+                          <div class="btn-group btn-group-sm">
+                            <a href="{% url 'raffles:admin_order_detail' order.id %}" class="btn btn-outline-primary">
+                              <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="/admin/raffles/order/{{ order.id }}/change/" class="btn btn-outline-secondary">
+                              <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if order.status == 'aguardando_confirmacao' %}
+                              <button class="btn btn-success" onclick="confirmOrder({{ order.id }})">
+                                <i class="bi bi-check"></i>
+                              </button>
+                            {% endif %}
+                            {% if order.status in 'reservado,aguardando_confirmacao' %}
+                              <button class="btn btn-danger" onclick="cancelOrder({{ order.id }})">
+                                <i class="bi bi-x"></i>
+                              </button>
+                            {% endif %}
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <h3 class="text-muted mt-3">Nenhum pedido encontrado</h3>
+                <p class="text-muted">Não há pedidos que correspondam aos filtros aplicados.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    function confirmOrder(orderId) {
+      if (confirm('Confirmar este pedido?')) {
+        window.location.href = `{% url 'raffles:confirm_order' 0 %}`.replace('0', orderId);
+      }
+    }
+    
+    function cancelOrder(orderId) {
+      if (confirm('Cancelar este pedido?')) {
+        window.location.href = `{% url 'raffles:cancel_order' 0 %}`.replace('0', orderId);
+      }
+    }
+  </script>
+{% endblock %}

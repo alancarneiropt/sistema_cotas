@@ -1,0 +1,289 @@
+{% extends 'raffles/base_admin.html' %}
+{% load static %}
+
+{% block title %}
+  {% if action == 'create' %}
+    Criar Produto - Sistema de Cotas
+  {% else %}
+    Editar Produto - Sistema de Cotas
+  {% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if action == 'create' %}
+    Criar Produto
+  {% else %}
+    Editar Produto
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-12">
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% url 'raffles:admin_dashboard' %}">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'raffles:admin_products' %}">Produtos</a>
+          </li>
+          <li class="breadcrumb-item active">
+            {% if action == 'create' %}
+              Criar
+            {% else %}
+              Editar
+            {% endif %}
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Form Card -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-{% if action == 'create' %}
+                plus-circle
+              {% else %}
+                pencil-square
+              {% endif %} me-2">
+
+            </i>
+            {% if action == 'create' %}
+              Criar Novo Produto
+            {% else %}
+              Editar: {{ product.title }}
+            {% endif %}
+          </h5>
+        </div>
+
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="row">
+              <!-- Informações Básicas -->
+              <div class="col-md-8">
+                <h6 class="text-muted mb-3">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Informações Básicas
+                </h6>
+
+                <div class="mb-3">
+                  <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }} <span class="text-danger">*</span></label>
+                  {{ form.title }}
+                  {% if form.title.errors %}
+                    <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="mb-3">
+                  <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                  {{ form.description }}
+                  {% if form.description.errors %}
+                    <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="{{ form.price_cents.id_for_label }}" class="form-label">{{ form.price_cents.label }} <span class="text-danger">*</span></label>
+                      {{ form.price_cents }}
+                      <div class="form-text">Digite o preço em centavos (ex: 20 para R$ 0,20)</div>
+                      {% if form.price_cents.errors %}
+                        <div class="invalid-feedback d-block">{{ form.price_cents.errors.0 }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label for="{{ form.total_quotas.id_for_label }}" class="form-label">{{ form.total_quotas.label }} <span class="text-danger">*</span></label>
+                      {{ form.total_quotas }}
+                      {% if form.total_quotas.errors %}
+                        <div class="invalid-feedback d-block">{{ form.total_quotas.errors.0 }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="{{ form.draw_datetime.id_for_label }}" class="form-label">{{ form.draw_datetime.label }}</label>
+                  {{ form.draw_datetime }}
+                  <div class="form-text">Data e hora do sorteio (opcional)</div>
+                  {% if form.draw_datetime.errors %}
+                    <div class="invalid-feedback d-block">{{ form.draw_datetime.errors.0 }}</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Configurações e Imagem -->
+              <div class="col-md-4">
+                <h6 class="text-muted mb-3">
+                  <i class="bi bi-gear me-1"></i>
+                  Configurações
+                </h6>
+
+                <div class="mb-3">
+                  <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }} <span class="text-danger">*</span></label>
+                  {{ form.status }}
+                  {% if form.status.errors %}
+                    <div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="mb-3">
+                  <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
+                  {{ form.image }}
+                  {% if form.image.errors %}
+                    <div class="invalid-feedback d-block">{{ form.image.errors.0 }}</div>
+                  {% endif %}
+
+                  {% if product and product.image %}
+                    <div class="mt-2">
+                      <img src="{{ product.image.url }}" alt="{{ product.title }}" class="img-thumbnail" style="max-width: 200px; max-height: 200px;" />
+                      <div class="form-text">Imagem atual</div>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="row">
+              <div class="col-12">
+                <hr class="my-4" />
+
+                <div class="d-flex justify-content-between">
+                  <a href="{% url 'raffles:admin_products' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Voltar
+                  </a>
+
+                  <div>
+                    {% if action == 'edit' and product %}
+                      <a href="{% url 'raffles:admin_product_delete' product.id %}" class="btn btn-outline-danger me-2" onclick="return confirm('Tem certeza que deseja deletar este produto? Esta ação não pode ser desfeita.')">
+                        <i class="bi bi-trash me-1"></i>
+                        Deletar
+                      </a>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary">
+                      <i class="bi bi-{% if action == 'create' %}
+                          plus-circle
+                        {% else %}
+                          check-circle
+                        {% endif %} me-1">
+
+                      </i>
+                      {% if action == 'create' %}
+                        Criar Produto
+                      {% else %}
+                        Salvar Alterações
+                      {% endif %}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Card -->
+  {% if action == 'edit' and product %}
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="card-title mb-0">
+              <i class="bi bi-eye me-2"></i>
+              Visualização do Produto
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                {% if product.image %}
+                  <img src="{{ product.image.url }}" alt="{{ product.title }}" class="img-fluid rounded" />
+                {% else %}
+                  <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-md-9">
+                <h5>{{ product.title }}</h5>
+                <p class="text-muted">{{ product.description|default:'Sem descrição' }}</p>
+
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="stats-card">
+                      <div class="stats-number">{{ product.total_quotas }}</div>
+                      <div class="stats-label">Total</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="stats-card">
+                      <div class="stats-number">{{ product.sold_count }}</div>
+                      <div class="stats-label">Vendidas</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="stats-card">
+                      <div class="stats-number">{{ product.available_count }}</div>
+                      <div class="stats-label">Disponíveis</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <script>
+    // Form validation
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.querySelector('form')
+      const inputs = form.querySelectorAll('input[required], select[required], textarea[required]')
+    
+      inputs.forEach((input) => {
+        input.addEventListener('blur', function () {
+          if (this.checkValidity()) {
+            this.classList.remove('is-invalid')
+            this.classList.add('is-valid')
+          } else {
+            this.classList.remove('is-valid')
+            this.classList.add('is-invalid')
+          }
+        })
+      })
+    
+      form.addEventListener('submit', function (e) {
+        let isValid = true
+    
+        inputs.forEach((input) => {
+          if (!input.checkValidity()) {
+            input.classList.add('is-invalid')
+            isValid = false
+          }
+        })
+    
+        if (!isValid) {
+          e.preventDefault()
+          const firstInvalid = form.querySelector('.is-invalid')
+          if (firstInvalid) {
+            firstInvalid.focus()
+          }
+        }
+      })
+    })
+  </script>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block title %}
+  Status do Pedido - Sistema de Cotas
+{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">
+              <i class="bi bi-search"></i>
+              Status do Pedido #{{ order.id }}
+            </h3>
+          </div>
+          <div class="card-body">
+            <!-- Order Details -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <h6>Informações do Pedido</h6>
+                <p>
+                  <strong>Cliente:</strong> {{ order.full_name }}
+                </p>
+                <p>
+                  <strong>Produto:</strong> {{ order.product.title }}
+                </p>
+                <p>
+                  <strong>Quantidade:</strong> {{ order.quantity }} cota{{ order.quantity|pluralize }}
+                </p>
+              </div>
+              <div class="col-md-6">
+                <h6>Status e Valores</h6>
+                <p>
+                  <strong>Status:</strong>
+                  <span class="badge bg-{% if order.status == 'confirmado' %}
+                      
+                      
+                      
+                      success
+
+
+
+                    {% elif order.status == 'cancelado' %}
+                      
+                      
+                      
+                      danger
+
+
+
+                    {% elif order.status == 'expirado' %}
+                      
+                      
+                      
+                      secondary
+
+
+
+                    {% else %}
+                      
+                      
+                      
+                      warning
+
+
+
+                    {% endif %}">
+                    {{ order.get_status_display }}
+                  </span>
+                </p>
+                <p>
+                  <strong>Valor Total:</strong> {{ order.total_price_display }}
+                </p>
+                <p>
+                  <strong>Criado em:</strong> {{ order.created_at|date:'d/m/Y à\s H:i' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Quotas -->
+            {% if order.quotas.all %}
+              <div class="mb-4">
+                <h6>Suas Cotas</h6>
+                <div class="d-flex flex-wrap gap-2">
+                  {% for quota in order.quotas.all %}
+                    <span class="badge bg-primary fs-6">{{ quota.number }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Actions based on status -->
+            <div class="mb-4">
+              {% if order.status == 'reservado' or order.status == 'aguardando_confirmacao' %}
+                {% if not order.is_expired %}
+                  <div class="alert alert-warning">
+                    <h6><i class="bi bi-clock"></i> Pedido Reservado</h6>
+                    <p class="mb-2">Seu pedido está reservado. Você tem até {{ order.reserve_expires_at|date:'d/m/Y à\s H:i' }} para enviar o comprovante.</p>
+                    <a href="{% url 'raffles:upload_receipt' order.id %}" class="btn btn-primary"><i class="bi bi-upload"></i> Enviar Comprovante</a>
+                  </div>
+                {% else %}
+                  <div class="alert alert-danger">
+                    <h6><i class="bi bi-x-circle"></i> Pedido Expirado</h6>
+                    <p class="mb-0">O prazo para envio do comprovante expirou. Suas cotas foram liberadas.</p>
+                  </div>
+                {% endif %}
+              {% elif order.status == 'aguardando_comprovante' %}
+                <div class="alert alert-info">
+                  <h6><i class="bi bi-hourglass-split"></i> Aguardando Comprovante</h6>
+                  <p class="mb-2">Aguardando o envio do comprovante de pagamento.</p>
+                  <a href="{% url 'raffles:upload_receipt' order.id %}" class="btn btn-primary"><i class="bi bi-upload"></i> Enviar Comprovante</a>
+                </div>
+              {% elif order.status == 'confirmado' %}
+                <div class="alert alert-success">
+                  <h6><i class="bi bi-check-circle"></i> Pedido Confirmado</h6>
+                  <p class="mb-0">Seu pagamento foi confirmado! Suas cotas estão garantidas para o sorteio.</p>
+                </div>
+              {% elif order.status == 'cancelado' %}
+                <div class="alert alert-danger">
+                  <h6><i class="bi bi-x-circle"></i> Pedido Cancelado</h6>
+                  <p class="mb-0">Este pedido foi cancelado. Entre em contato conosco se precisar de ajuda.</p>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Contact Info -->
+            <div class="text-center">
+              <p class="text-muted">Dúvidas? Entre em contato conosco:</p>
+              <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="mailto:contato@sistemacotas.com" class="btn btn-outline-primary"><i class="bi bi-envelope"></i> E-mail</a>
+                <a href="https://wa.me/556992353000" class="btn btn-outline-success" target="_blank"><i class="bi bi-whatsapp"></i> WhatsApp</a>
+                <a href="{% url 'raffles:order_detail_full' order.id %}" class="btn btn-outline-info"><i class="bi bi-eye"></i> Ver Detalhes Completos</a>
+                <a href="{% url 'raffles:home' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> Voltar ao Início</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'raffles/base_admin.html' %}
+
+{% block title %}
+  Deletar Produto - Sistema de Cotas
+{% endblock %}
+
+{% block page_title %}
+  Deletar Produto
+{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% url 'raffles:admin_dashboard' %}">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'raffles:admin_products' %}">Produtos</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'raffles:admin_product_detail' product.id %}">{{ product.title }}</a>
+          </li>
+          <li class="breadcrumb-item active">Deletar</li>
+        </ol>
+      </nav>
+
+      <!-- Confirmation Card -->
+      <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Confirmar Exclusão
+          </h5>
+        </div>
+
+        <div class="card-body">
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+          </div>
+
+          <p class="mb-3">
+            Você está prestes a deletar o produto <strong>"{{ product.title }}"</strong>.
+          </p>
+
+          <div class="bg-light p-3 rounded mb-3">
+            <h6 class="text-muted mb-2">Informações do Produto:</h6>
+            <ul class="list-unstyled mb-0">
+              <li>
+                <strong>Título:</strong> {{ product.title }}
+              </li>
+              <li>
+                <strong>Status:</strong>
+                <span class="badge bg-{% if product.status == 'ativo' %}
+                    success
+                  {% elif product.status == 'rascunho' %}
+                    warning
+                  {% else %}
+                    secondary
+                  {% endif %}">
+                  {{ product.get_status_display }}
+                </span>
+              </li>
+              <li>
+                <strong>Preço por cota:</strong> R$ {{ product.price_display }}
+              </li>
+              <li>
+                <strong>Total de cotas:</strong> {{ product.total_quotas }}
+              </li>
+              <li>
+                <strong>Cotas vendidas:</strong> {{ product.sold_count }}
+              </li>
+              <li>
+                <strong>Cotas reservadas:</strong> {{ product.reserved_count }}
+              </li>
+              <li>
+                <strong>Criado em:</strong> {{ product.created_at|date:'d/m/Y H:i' }}
+              </li>
+            </ul>
+          </div>
+
+          {% if product.sold_count > 0 or product.reserved_count > 0 %}
+            <div class="alert alert-danger">
+              <i class="bi bi-x-circle me-2"></i>
+              <strong>Não é possível deletar este produto!</strong><br />
+              Este produto possui {{ product.sold_count }} cotas vendidas e {{ product.reserved_count }} cotas reservadas. Para deletar, todas as cotas devem estar disponíveis.
+            </div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'raffles:admin_product_detail' product.id %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Cancelar
+              </a>
+
+              {% if product.sold_count == 0 and product.reserved_count == 0 %}
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza absoluta que deseja deletar este produto? Esta ação NÃO pode ser desfeita!')">
+                  <i class="bi bi-trash me-1"></i>
+                  Sim, Deletar Produto
+                </button>
+              {% else %}
+                <button type="button" class="btn btn-danger" disabled>
+                  <i class="bi bi-trash me-1"></i>
+                  Não é possível deletar
+                </button>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,274 @@
+{% extends 'raffles/base_admin.html' %}
+{% load static %}
+
+{% block title %}
+  Dashboard - Sistema de Cotas
+{% endblock %}
+
+{% block page_title %}
+  <i class="bi bi-speedometer2 me-2"></i>
+  Dashboard
+{% endblock %}
+
+{% block content %}
+  <div class="row g-4">
+    <!-- Stats Cards -->
+    <div class="col-lg-3 col-md-6">
+      <div class="stats-card">
+        <div class="stats-icon primary">
+          <i class="bi bi-box"></i>
+        </div>
+        <div class="stats-number">{{ total_products }}</div>
+        <div class="stats-label">Total de Produtos</div>
+      </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+      <div class="stats-card">
+        <div class="stats-icon success">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="stats-number">{{ active_products }}</div>
+        <div class="stats-label">Produtos Ativos</div>
+      </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+      <div class="stats-card">
+        <div class="stats-icon warning">
+          <i class="bi bi-cart"></i>
+        </div>
+        <div class="stats-number">{{ orders_stats.total_orders|default:0 }}</div>
+        <div class="stats-label">Total de Pedidos</div>
+      </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+      <div class="stats-card">
+        <div class="stats-icon info">
+          <i class="bi bi-currency-dollar"></i>
+        </div>
+        <div class="stats-number">{{ total_revenue|default:"R$ 0,00" }}</div>
+        <div class="stats-label">Receita Total</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Product Overview -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-graph-up me-2"></i>
+            Visão Geral dos Produtos
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if products %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Status</th>
+                    <th>Progresso</th>
+                    <th>Vendidas</th>
+                    <th>Disponíveis</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for product in products %}
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.title }}" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                          {% else %}
+                            <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                              <i class="bi bi-image text-muted"></i>
+                            </div>
+                          {% endif %}
+                          <div>
+                            <h6 class="mb-0">{{ product.title }}</h6>
+                            <small class="text-muted">{{ product.total_quotas }} cotas</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge bg-{% if product.status == 'ativo' %}success{% elif product.status == 'encerrado' %}danger{% else %}warning{% endif %}">
+                          {{ product.get_status_display }}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="progress" style="height: 8px;">
+                          <div class="progress-bar bg-gradient" style="width: {{ product.progress_percentage|default:0 }}%"></div>
+                        </div>
+                        <small class="text-muted">{{ product.progress_percentage|default:0 }}%</small>
+                      </td>
+                      <td>
+                        <span class="badge bg-success">{{ product.sold_count }}</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-info">{{ product.available_count }}</span>
+                      </td>
+                      <td>
+                        <div class="btn-group btn-group-sm">
+                          <a href="{% url 'raffles:admin_product_detail' product.id %}" class="btn btn-outline-primary" title="Ver Detalhes">
+                            <i class="bi bi-eye"></i>
+                          </a>
+                          <a href="/admin/raffles/product/{{ product.id }}/change/" class="btn btn-outline-secondary" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-5">
+              <i class="bi bi-inbox display-1 text-muted"></i>
+              <h4 class="text-muted mt-3">Nenhum produto encontrado</h4>
+              <p class="text-muted">Crie seu primeiro produto para começar.</p>
+              <a href="/admin/raffles/product/add/" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>
+                Criar Produto
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recent Orders -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-clock-history me-2"></i>
+            Pedidos Recentes
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if recent_orders %}
+            <div class="list-group list-group-flush">
+              {% for order in recent_orders %}
+                <div class="list-group-item border-0 px-0">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h6 class="mb-1">{{ order.full_name }}</h6>
+                      <p class="mb-1 text-muted">{{ order.product.title }}</p>
+                      <small class="text-muted">
+                        <i class="bi bi-calendar me-1"></i>
+                        {{ order.created_at|date:"d/m/Y H:i" }}
+                      </small>
+                    </div>
+                    <div class="text-end">
+                      <span class="badge bg-{% if order.status == 'confirmado' %}success{% elif order.status == 'cancelado' %}danger{% elif order.status == 'expirado' %}secondary{% else %}warning{% endif %} mb-2">
+                        {{ order.get_status_display }}
+                      </span>
+                      <br>
+                      <strong>{{ order.total_price_display }}</strong>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            <div class="text-center mt-3">
+              <a href="{% url 'raffles:admin_order_history' %}" class="btn btn-outline-primary">
+                <i class="bi bi-eye me-2"></i>
+                Ver Todos os Pedidos
+              </a>
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-cart-x display-4 text-muted"></i>
+              <h6 class="text-muted mt-2">Nenhum pedido encontrado</h6>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="row g-4 mt-2">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="bi bi-lightning me-2"></i>
+            Ações Rápidas
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-lg-3 col-md-6">
+              <a href="/admin/raffles/product/add/" class="btn btn-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                <i class="bi bi-plus-circle display-4 mb-2"></i>
+                <span>Criar Produto</span>
+              </a>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <a href="{% url 'raffles:admin_order_history' %}" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                <i class="bi bi-list-check display-4 mb-2"></i>
+                <span>Gerenciar Pedidos</span>
+              </a>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <a href="{% url 'raffles:admin_logs' %}" class="btn btn-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                <i class="bi bi-journal-text display-4 mb-2"></i>
+                <span>Ver Logs</span>
+              </a>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <a href="{% url 'raffles:home' %}" class="btn btn-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                <i class="bi bi-globe display-4 mb-2"></i>
+                <span>Site Público</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .progress-bar.bg-gradient {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+  
+  .list-group-item:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .btn-group-sm .btn {
+    padding: 0.375rem 0.75rem;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Auto-refresh stats every 30 seconds
+  setInterval(function() {
+    // You can implement AJAX refresh here if needed
+  }, 30000);
+  
+  // Add hover effects to stats cards
+  document.querySelectorAll('.stats-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-10px) scale(1.02)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0) scale(1)';
+    });
+  });
+</script>
+{% endblock %}

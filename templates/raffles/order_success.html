@@ -1,0 +1,400 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block title %}
+  Pedido Realizado - Sistema de Cotas
+{% endblock %}
+
+{% block extra_css %}
+  <style>
+    .success-icon {
+      font-size: 4rem;
+      color: #28a745;
+    }
+    
+    .quota-number {
+      background: #e3f2fd;
+      border: 2px solid #2196f3;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      margin: 0.25rem;
+      display: inline-block;
+      font-weight: bold;
+      color: #1976d2;
+    }
+    
+    .order-info {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .countdown {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      color: white;
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      margin: 1rem 0;
+    }
+    
+    .countdown-number {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    
+    .payment-info {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    @media (max-width: 992px) {
+      .action-buttons {
+        gap: 1rem;
+      }
+    
+      .action-buttons .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .action-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+    
+      .action-buttons .btn {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+      }
+    
+      .success-icon {
+        font-size: 3rem;
+      }
+    
+      .success-title {
+        font-size: 1.75rem;
+      }
+    
+      .success-subtitle {
+        font-size: 1rem;
+      }
+    
+      .payment-info {
+        padding: 1.5rem;
+      }
+    
+      .contact-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    
+      .contact-buttons .btn {
+        width: 100%;
+        font-size: 0.85rem;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .success-icon {
+        font-size: 2.5rem;
+      }
+    
+      .success-title {
+        font-size: 1.5rem;
+      }
+    
+      .success-subtitle {
+        font-size: 0.9rem;
+      }
+    
+      .payment-info {
+        padding: 1rem;
+      }
+    
+      .payment-info h4 {
+        font-size: 1.1rem;
+      }
+    
+      .payment-info p {
+        font-size: 0.85rem;
+      }
+    
+      .action-buttons .btn {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.8rem;
+      }
+    
+      .contact-buttons .btn {
+        font-size: 0.8rem;
+        padding: 0.6rem 0.8rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .success-icon {
+        font-size: 2rem;
+      }
+    
+      .success-title {
+        font-size: 1.25rem;
+      }
+    
+      .success-subtitle {
+        font-size: 0.85rem;
+      }
+    
+      .payment-info {
+        padding: 0.75rem;
+      }
+    
+      .payment-info h4 {
+        font-size: 1rem;
+      }
+    
+      .payment-info p {
+        font-size: 0.8rem;
+      }
+    
+      .action-buttons .btn {
+        padding: 0.5rem 0.6rem;
+        font-size: 0.75rem;
+      }
+    
+      .contact-buttons .btn {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.6rem;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <!-- Success Header -->
+        <div class="text-center mb-5">
+          <div class="success-icon mb-3">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+          <h1 class="display-5 fw-bold text-success">Pedido Realizado!</h1>
+          <p class="lead text-muted">Seu pedido foi criado com sucesso. Abaixo estão os detalhes e próximos passos.</p>
+        </div>
+
+        <!-- Order Information -->
+        <div class="order-info mb-4">
+          <h3 class="h4 mb-4">
+            <i class="bi bi-receipt"></i>
+            Informações do Pedido
+          </h3>
+
+          <div class="row">
+            <div class="col-md-6">
+              <p>
+                <strong>Número do Pedido:</strong> #{{ order_id }}
+              </p>
+              <p>
+                <strong>Produto:</strong> {{ order.product.title }}
+              </p>
+              <p>
+                <strong>Quantidade:</strong> {{ order.quantity }} cota{{ order.quantity|pluralize }}
+              </p>
+            </div>
+            <div class="col-md-6">
+              <p>
+                <strong>Cliente:</strong> {{ order.full_name }}
+              </p>
+              <p>
+                <strong>Status:</strong>
+                <span class="badge bg-warning">{{ order.get_status_display }}</span>
+              </p>
+              <p>
+                <strong>Total:</strong> {{ order_total }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quotas Allocated -->
+        {% if numbers %}
+          <div class="order-info mb-4">
+            <h3 class="h4 mb-4">
+              <i class="bi bi-ticket-perforated"></i>
+              Suas Cotas
+            </h3>
+
+            <p class="text-muted mb-3">Os seguintes números foram alocados automaticamente para você:</p>
+
+            <div class="text-center">
+              {% for number in numbers %}
+                <span class="quota-number">{{ number }}</span>
+              {% endfor %}
+            </div>
+
+            <div class="alert alert-info mt-3">
+              <i class="bi bi-info-circle"></i>
+              <strong>Importante:</strong> Guarde estes números! Eles são únicos e são seus até a confirmação do pagamento.
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Countdown Timer -->
+        {% if reserve_expires_at %}
+          <div class="countdown">
+            <h5><i class="bi bi-clock"></i> Tempo para Confirmação</h5>
+            <div class="countdown-number" id="countdown">Carregando...</div>
+            <p class="mb-0">Você tem este tempo para enviar o comprovante de pagamento</p>
+          </div>
+        {% endif %}
+
+        <!-- Payment Information -->
+        <div class="payment-info mb-4">
+          <h4 class="h5 mb-3">
+            <i class="bi bi-credit-card"></i>
+            Informações para Pagamento
+          </h4>
+
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <p>
+                <strong>Valor Total:</strong> {{ order_total }}
+              </p>
+              <p>
+                <strong>💳 PIX:</strong> cris.braga.563@gmail.com
+              </p>
+              <p>
+                <strong>🏦 Banco:</strong> Inter
+              </p>
+              <p>
+                <strong>👤 Titular:</strong> Maria Cristina Martins Braga
+              </p>
+            </div>
+          </div>
+
+          <div class="alert alert-warning mt-3">
+            <strong>Instruções:</strong>
+            <ul class="mb-0">
+              <li>Realize o pagamento no valor exato: {{ order_total }}</li>
+              <li>Envie o comprovante através do botão abaixo ou pelo WhatsApp</li>
+              <li>Após o envio, aguarde a confirmação do pagamento</li>
+              <li>Em caso de dúvidas, entre em contato conosco</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons mb-4">
+          <a href="{% url 'raffles:upload_receipt' order_id %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-upload"></i>
+            Enviar Comprovante
+          </a>
+
+          {% if order.whatsapp %}
+            <a href="https://wa.me/556992353000?text=Olá! Gostaria de enviar o comprovante do pedido #{{ order_id }}" class="btn btn-success btn-lg" target="_blank">
+              <i class="bi bi-whatsapp"></i>
+              WhatsApp
+            </a>
+          {% endif %}
+
+          <a href="{% url 'raffles:order_status' order_id %}" class="btn btn-info btn-lg">
+            <i class="bi bi-search"></i>
+            Acompanhar Pedido
+          </a>
+
+          <a href="{% url 'raffles:order_detail_full' order_id %}" class="btn btn-outline-info btn-lg">
+            <i class="bi bi-eye"></i>
+            Ver Detalhes Completos
+          </a>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="order-info">
+          <h4 class="h5 mb-3">
+            <i class="bi bi-list-check"></i>
+            Próximos Passos
+          </h4>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="text-primary">1. Pagamento</h6>
+              <p class="small text-muted">Realize o pagamento através de PIX ou transferência bancária no valor de {{ order_total }}.</p>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-primary">2. Comprovante</h6>
+              <p class="small text-muted">Envie o comprovante de pagamento através do botão acima ou pelo WhatsApp.</p>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-primary">3. Confirmação</h6>
+              <p class="small text-muted">Aguarde a confirmação do pagamento. Você receberá uma notificação por e-mail ou WhatsApp.</p>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-primary">4. Sorteio</h6>
+              <p class="small text-muted">Participe do sorteio na data marcada. O resultado será divulgado em nosso site.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="text-center mt-4">
+          <p class="text-muted">
+            <i class="bi bi-headset"></i>
+            Dúvidas? Entre em contato conosco:
+          </p>
+          <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="mailto:contato@sistemacotas.com" class="btn btn-outline-primary"><i class="bi bi-envelope"></i> E-mail</a>
+            <a href="https://wa.me/556992353000" class="btn btn-outline-success" target="_blank"><i class="bi bi-whatsapp"></i> WhatsApp</a>
+            <a href="{% url 'raffles:home' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> Voltar ao Início</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    // Countdown timer
+    {% if reserve_expires_at %}
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const reserveTime = new Date('{{ reserve_expires_at|date:"c" }}').getTime();
+        const timeLeft = reserveTime - now;
+        
+        if (timeLeft > 0) {
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            
+            document.getElementById('countdown').innerHTML = 
+                (minutes < 10 ? '0' : '') + minutes + ':' + 
+                (seconds < 10 ? '0' : '') + seconds;
+        } else {
+            document.getElementById('countdown').innerHTML = 'Expirado';
+            document.getElementById('countdown').style.color = '#ff6b6b';
+        }
+    }
+    
+    // Update countdown every second
+    setInterval(updateCountdown, 1000);
+    updateCountdown(); // Initial call
+    {% endif %}
+    
+    // Auto-refresh page every 30 seconds to update status
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

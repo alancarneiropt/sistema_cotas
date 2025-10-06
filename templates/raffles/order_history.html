@@ -1,0 +1,135 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block title %}
+  Histórico de Pedidos - Sistema de Cotas
+{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="text-center mb-5">
+          <h1 class="display-5 fw-bold text-primary">
+            <i class="bi bi-search"></i>
+            Consultar Pedidos
+          </h1>
+          <p class="lead text-muted">Digite seu nome, e-mail ou WhatsApp para encontrar seus pedidos</p>
+        </div>
+
+        <!-- Formulário de Busca -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              <div class="input-group input-group-lg">
+                <input type="text" class="form-control" name="search" placeholder="Digite seu nome, e-mail ou WhatsApp..." value="{{ search_query }}" required />
+                <button class="btn btn-primary" type="submit">
+                  <i class="bi bi-search"></i>
+                  Buscar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Resultados -->
+        {% if orders %}
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="bi bi-list-check"></i>
+                Pedidos Encontrados ({{ orders|length }})
+              </h5>
+            </div>
+            <div class="card-body">
+              {% for order in orders %}
+                <div class="border rounded p-3 mb-3">
+                  <div class="row align-items-center">
+                    <div class="col-md-8">
+                      <h6 class="mb-1">
+                        <strong>Pedido #{{ order.id }}</strong>
+                        <span class="badge bg-{% if order.status == 'confirmado' %}
+                            
+                            success
+
+                          {% elif order.status == 'cancelado' %}
+                            
+                            danger
+
+                          {% elif order.status == 'expirado' %}
+                            
+                            secondary
+
+                          {% else %}
+                            
+                            warning
+
+                          {% endif %} ms-2">
+                          {{ order.get_status_display }}
+                        </span>
+                      </h6>
+                      <p class="mb-1 text-muted">
+                        <strong>{{ order.product.title }}</strong>
+                      </p>
+                      <p class="mb-1 small text-muted">{{ order.quantity }} cota{{ order.quantity|pluralize }} •
+                        {{ order.total_price_display }} •
+                        {{ order.created_at|date:'d/m/Y H:i' }}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                      <a href="{% url 'raffles:order_detail_full' order.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye"></i>
+                        Ver Detalhes
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% elif search_query %}
+          <div class="card">
+            <div class="card-body text-center py-5">
+              <i class="bi bi-inbox display-1 text-muted"></i>
+              <h3 class="text-muted mt-3">Nenhum pedido encontrado</h3>
+              <p class="text-muted">
+                Não encontramos pedidos com os critérios informados.<br />
+                Verifique se digitou corretamente seu nome, e-mail ou WhatsApp.
+              </p>
+              <a href="{% url 'raffles:order_history' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i>
+                Nova Busca
+              </a>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Informações -->
+        <div class="card mt-4">
+          <div class="card-body">
+            <h6><i class="bi bi-info-circle"></i> Informações Importantes</h6>
+            <ul class="mb-0 small">
+              <li>Você pode buscar por seu nome completo, e-mail ou número de WhatsApp</li>
+              <li>A busca é case-insensitive (não diferencia maiúsculas de minúsculas)</li>
+              <li>Você pode buscar por parte do nome (ex: apenas o primeiro nome)</li>
+              <li>Todos os seus pedidos serão exibidos, independente do status</li>
+              <li>Clique em "Ver Detalhes" para ver os números das cotas e comprovantes</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Links Úteis -->
+        <div class="text-center mt-4">
+          <a href="{% url 'raffles:home' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-house"></i>
+            Voltar ao Início
+          </a>
+          <a href="{% url 'raffles:winners_list' %}" class="btn btn-outline-info ms-2">
+            <i class="bi bi-trophy"></i>
+            Ver Vencedores
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

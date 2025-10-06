@@ -1,0 +1,114 @@
+{% extends 'raffles/base_admin.html' %}
+{% load static %}
+
+{% block title %}
+  Logs Administrativos - Sistema de Cotas
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid py-4">
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1 class="h2 mb-0">
+          <i class="bi bi-journal-text"></i>
+          Logs Administrativos
+        </h1>
+        <p class="text-muted">Histórico de ações realizadas pelos administradores</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Registros de Log</h5>
+          </div>
+          <div class="card-body">
+            {% if logs %}
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Data/Hora</th>
+                      <th>Administrador</th>
+                      <th>Ação</th>
+                      <th>Detalhes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for log in logs %}
+                      <tr>
+                        <td>
+                          <div>
+                            {{ log.created_at|date:'d/m/Y' }}
+                            <br />
+                            <small class="text-muted">{{ log.created_at|date:'H:i:s' }}</small>
+                          </div>
+                        </td>
+                        <td>
+                          {% if log.admin_id %}
+                            <span class="badge bg-primary">{{ log.admin_id }}</span>
+                          {% else %}
+                            <span class="badge bg-secondary">Sistema</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <span class="badge bg-info">{{ log.action }}</span>
+                        </td>
+                        <td>
+                          {% if log.details %}
+                            <button class="btn btn-sm btn-outline-secondary" onclick="showDetails('{{ log.id }}')">
+                              <i class="bi bi-eye"></i>
+                              Ver Detalhes
+                            </button>
+                          {% else %}
+                            <span class="text-muted">-</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+
+                      <!-- Hidden details row -->
+                      {% if log.details %}
+                        <tr id="details-{{ log.id }}" style="display: none;">
+                          <td colspan="4">
+                            <div class="alert alert-light">
+                              <h6>Detalhes da Ação:</h6>
+                              <pre class="mb-0">{{ log.details|pprint }}</pre>
+                            </div>
+                          </td>
+                        </tr>
+                      {% endif %}
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center py-5">
+                <i class="bi bi-journal-x display-1 text-muted"></i>
+                <h3 class="text-muted mt-3">Nenhum log encontrado</h3>
+                <p class="text-muted">Não há registros de ações administrativas ainda.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    function showDetails(logId) {
+      const detailsRow = document.getElementById('details-' + logId)
+      const button = event.target.closest('button')
+    
+      if (detailsRow.style.display === 'none') {
+        detailsRow.style.display = 'table-row'
+        button.innerHTML = '<i class="bi bi-eye-slash"></i> Ocultar Detalhes'
+      } else {
+        detailsRow.style.display = 'none'
+        button.innerHTML = '<i class="bi bi-eye"></i> Ver Detalhes'
+      }
+    }
+  </script>
+{% endblock %}

@@ -1,0 +1,34 @@
+# Arquivo de serviço systemd para Sistema de Cotas
+# Salve este arquivo como /etc/systemd/system/sistema-cotas.service
+
+[Unit]
+Description=Sistema de Cotas Django Application
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/your/project
+Environment=DJANGO_SETTINGS_MODULE=sistema_cotas.settings
+Environment=DEBUG=False
+ExecStart=/path/to/your/venv/bin/gunicorn --bind 127.0.0.1:8000 --workers 3 --timeout 120 --max-requests 1000 --max-requests-jitter 100 sistema_cotas.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=3
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/path/to/your/project/media
+ReadWritePaths=/path/to/your/project/logs
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sistema-cotas
+
+[Install]
+WantedBy=multi-user.target

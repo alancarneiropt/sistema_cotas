@@ -1,0 +1,403 @@
+{% extends 'raffles/base_admin.html' %}
+{% load static %}
+
+{% block title %}
+  Pedido #{{ order.id }} - Detalhes - Sistema de Cotas
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid py-4">
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1 class="h2 mb-0">
+            <i class="bi bi-cart"></i>
+            Pedido #{{ order.id }}
+          </h1>
+          <div class="btn-group">
+            <a href="{% url 'raffles:admin_orders' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i>
+              Voltar
+            </a>
+            <a href="/admin/raffles/order/{{ order.id }}/change/" class="btn btn-primary">
+              <i class="bi bi-pencil"></i>
+              Editar
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Order Information -->
+      <div class="col-lg-6 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Informações do Pedido</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-sm-4">
+                <strong>ID do Pedido:</strong>
+              </div>
+              <div class="col-sm-8">#{{ order.id }}</div>
+            </div>
+
+            <hr />
+
+            <div class="row">
+              <div class="col-sm-4">
+                <strong>Status:</strong>
+              </div>
+              <div class="col-sm-8">
+                <span class="badge bg-{% if order.status == 'confirmado' %}
+                    
+                    
+                    
+                    success
+
+
+
+                  {% elif order.status == 'cancelado' %}
+                    
+                    
+                    
+                    danger
+
+
+
+                  {% elif order.status == 'expirado' %}
+                    
+                    
+                    
+                    secondary
+
+
+
+                  {% else %}
+                    
+                    
+                    
+                    warning
+
+
+
+                  {% endif %} fs-6">
+                  {{ order.get_status_display }}
+                </span>
+              </div>
+            </div>
+
+            <hr />
+
+            <div class="row">
+              <div class="col-sm-4">
+                <strong>Produto:</strong>
+              </div>
+              <div class="col-sm-8">{{ order.product.title }}</div>
+            </div>
+
+            <hr />
+
+            <div class="row">
+              <div class="col-sm-4">
+                <strong>Quantidade:</strong>
+              </div>
+              <div class="col-sm-8">{{ order.quantity }} cota{{ order.quantity|pluralize }}</div>
+            </div>
+
+            <hr />
+
+            <div class="row">
+              <div class="col-sm-4">
+                <strong>Valor Total:</strong>
+              </div>
+              <div class="col-sm-8">
+                <span class="fs-5 fw-bold text-success">{{ order.total_price_display }}</span>
+              </div>
+            </div>
+
+            <hr />
+
+            <div class="row">
+              <div class="col-sm-4">
+                <strong>Criado em:</strong>
+              </div>
+              <div class="col-sm-8">{{ order.created_at|date:'d/m/Y à\s H:i' }}</div>
+            </div>
+
+            {% if order.reserve_expires_at %}
+              <hr />
+              <div class="row">
+                <div class="col-sm-4">
+                  <strong>Expira em:</strong>
+                </div>
+                <div class="col-sm-8">
+                  {{ order.reserve_expires_at|date:'d/m/Y à\s H:i' }}
+                  {% if order.is_expired %}
+                    <br /><small class="text-danger">Expirado</small>
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Information -->
+      <div class="col-lg-6 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Informações do Cliente</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-sm-4">
+                <strong>Nome:</strong>
+              </div>
+              <div class="col-sm-8">{{ order.full_name }}</div>
+            </div>
+
+            {% if order.email %}
+              <hr />
+              <div class="row">
+                <div class="col-sm-4">
+                  <strong>E-mail:</strong>
+                </div>
+                <div class="col-sm-8">
+                  <a href="mailto:{{ order.email }}">{{ order.email }}</a>
+                </div>
+              </div>
+            {% endif %}
+
+            {% if order.whatsapp %}
+              <hr />
+              <div class="row">
+                <div class="col-sm-4">
+                  <strong>WhatsApp:</strong>
+                </div>
+                <div class="col-sm-8">
+                  <a href="https://wa.me/556992353000" target="_blank">{{ order.whatsapp }}</a>
+                </div>
+              </div>
+            {% endif %}
+
+            {% if order.receipt %}
+              <hr />
+              <div class="row">
+                <div class="col-sm-4">
+                  <strong>Comprovante:</strong>
+                </div>
+                <div class="col-sm-8">
+                  <a href="{{ order.receipt.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-download"></i>
+                    Baixar
+                  </a>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quotas -->
+    {% if quotas %}
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">Cotas Alocadas</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                {% for quota in quotas %}
+                  <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-2">
+                    <div class="text-center">
+                      <span class="badge bg-primary fs-6 p-2" style="width: 100%;">{{ quota.number }}</span>
+                      <div class="small text-muted">{{ quota.get_status_display }}</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Ações</h5>
+          </div>
+          <div class="card-body">
+            <div class="btn-group" role="group">
+              {% if order.status == 'aguardando_confirmacao' and order.receipt %}
+                <a href="{% url 'raffles:confirm_order_with_receipt' order.id %}" class="btn btn-success" onclick="return confirm('Confirmar pedido com comprovante?')">
+                  <i class="bi bi-check-circle"></i>
+                  Confirmar com Comprovante
+                </a>
+              {% endif %}
+
+              {% if order.status in 'reservado,aguardando_confirmacao' %}
+                <a href="{% url 'raffles:confirm_order_without_receipt' order.id %}" class="btn btn-warning" onclick="return confirm('⚠️ ATENÇÃO: Confirmar pedido SEM comprovante? Esta ação não pode ser desfeita!')">
+                  <i class="bi bi-exclamation-triangle"></i>
+                  Confirmar sem Comprovante
+                </a>
+              {% endif %}
+
+              {% if order.status in 'reservado,aguardando_confirmacao' %}
+                <button class="btn btn-danger" onclick="cancelOrder({{ order.id }})">
+                  <i class="bi bi-x-circle"></i>
+                  Cancelar Pedido
+                </button>
+              {% endif %}
+
+              {% if order.receipt %}
+                <a href="{{ order.receipt.url }}" target="_blank" class="btn btn-outline-primary">
+                  <i class="bi bi-download"></i>
+                  Baixar Comprovante
+                </a>
+              {% endif %}
+
+              {% if order.email %}
+                <a href="mailto:{{ order.email }}" class="btn btn-outline-info">
+                  <i class="bi bi-envelope"></i>
+                  Enviar E-mail
+                </a>
+              {% endif %}
+
+              {% if order.whatsapp %}
+                <a href="https://wa.me/556992353000" target="_blank" class="btn btn-outline-success">
+                  <i class="bi bi-whatsapp"></i>
+                  WhatsApp
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status History -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Histórico de Status</h5>
+          </div>
+          <div class="card-body">
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-marker bg-primary"></div>
+                <div class="timeline-content">
+                  <h6 class="timeline-title">Pedido Criado</h6>
+                  <p class="timeline-text">Pedido criado com status: {{ order.get_status_display }}</p>
+                  <small class="text-muted">{{ order.created_at|date:'d/m/Y à\s H:i' }}</small>
+                </div>
+              </div>
+
+              {% if order.reserve_expires_at %}
+                <div class="timeline-item">
+                  <div class="timeline-marker bg-warning"></div>
+                  <div class="timeline-content">
+                    <h6 class="timeline-title">Reserva Criada</h6>
+                    <p class="timeline-text">Reserva válida até: {{ order.reserve_expires_at|date:'d/m/Y à\s H:i' }}</p>
+                    {% if order.is_expired %}
+                      <small class="text-danger">Reserva expirada</small>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endif %}
+
+              {% if order.receipt %}
+                <div class="timeline-item">
+                  <div class="timeline-marker bg-info"></div>
+                  <div class="timeline-content">
+                    <h6 class="timeline-title">Comprovante Enviado</h6>
+                    <p class="timeline-text">Cliente enviou comprovante de pagamento</p>
+                    <a href="{{ order.receipt.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-download"></i>
+                      Ver Comprovante
+                    </a>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_css %}
+  <style>
+    .timeline {
+      position: relative;
+      padding-left: 30px;
+    }
+    
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    
+    .timeline-marker {
+      position: absolute;
+      left: -37px;
+      top: 0;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px #dee2e6;
+    }
+    
+    .timeline-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: -31px;
+      top: 12px;
+      width: 2px;
+      height: calc(100% + 8px);
+      background: #dee2e6;
+    }
+    
+    .timeline-content {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #007bff;
+    }
+    
+    .timeline-title {
+      margin: 0 0 5px 0;
+      font-weight: 600;
+    }
+    
+    .timeline-text {
+      margin: 0 0 5px 0;
+      color: #6c757d;
+    }
+  </style>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    function confirmOrder(orderId) {
+      if (confirm('Confirmar este pedido? Esta ação não pode ser desfeita.')) {
+        window.location.href = `{% url 'raffles:confirm_order' 0 %}`.replace('0', orderId)
+      }
+    }
+    
+    function cancelOrder(orderId) {
+      if (confirm('Cancelar este pedido? Esta ação liberará as cotas reservadas.')) {
+        window.location.href = `{% url 'raffles:cancel_order' 0 %}`.replace('0', orderId)
+      }
+    }
+  </script>
+{% endblock %}

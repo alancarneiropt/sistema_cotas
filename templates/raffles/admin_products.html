@@ -1,0 +1,188 @@
+{% extends 'raffles/base_admin.html' %}
+{% load static %}
+
+{% block title %}
+  Gerenciar Produtos - Sistema de Cotas
+{% endblock %}
+
+{% block content %}
+  <!-- CSRF Token for JavaScript -->
+  {% csrf_token %}
+
+  <div class="container-fluid py-4">
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1 class="h2 mb-0">
+            <i class="bi bi-box"></i>
+            Gerenciar Produtos
+          </h1>
+          <a href="{% url 'raffles:admin_product_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i>
+            Novo Produto
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      {% for product in products %}
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">{{ product.title }}</h5>
+              <span class="badge bg-{% if product.status == 'ativo' %}
+                  
+                  
+                  success
+
+
+                {% elif product.status == 'encerrado' %}
+                  
+                  
+                  danger
+
+
+                {% else %}
+                  
+                  
+                  secondary
+
+
+                {% endif %}">
+                {{ product.get_status_display }}
+              </span>
+            </div>
+
+            <div class="card-body">
+              {% if product.image %}
+                <img src="{{ product.image.url }}" class="img-fluid mb-3" alt="{{ product.title }}" style="height: 150px; object-fit: cover;" />
+              {% endif %}
+
+              <p class="text-muted small">{{ product.description|truncatewords:20 }}</p>
+
+              <div class="row text-center mb-3">
+                <div class="col-4">
+                  <div class="text-primary fw-bold">{{ product.total_quotas }}</div>
+                  <small class="text-muted">Total</small>
+                </div>
+                <div class="col-4">
+                  <div class="text-success fw-bold">{{ product.sold_count }}</div>
+                  <small class="text-muted">Vendidas</small>
+                </div>
+                <div class="col-4">
+                  <div class="text-warning fw-bold">{{ product.reserved_count }}</div>
+                  <small class="text-muted">Reservadas</small>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                  <span>Progresso</span>
+                  <span>{{ product.progress_percentage }}%</span>
+                </div>
+                <div class="progress">
+                  <div class="progress-bar bg-success" role="progressbar" style="width: {{ product.progress_percentage }}%"></div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <strong>Preço:</strong> {{ product.price_display }}
+              </div>
+
+              {% if product.draw_datetime %}
+                <div class="mb-3">
+                  <strong>Sorteio:</strong> {{ product.draw_datetime|date:'d/m/Y H:i' }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="card-footer">
+              <div class="btn-group w-100">
+                <a href="{% url 'raffles:admin_product_detail' product.id %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-eye"></i> Detalhes</a>
+                <a href="{% url 'raffles:admin_product_edit' product.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Editar</a>
+                {% if product.status == 'ativo' and product.sold_count > 0 %}
+                  <button class="btn btn-success btn-sm" onclick="drawProduct({{ product.id }})"><i class="bi bi-trophy"></i> Sortear</button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h3 class="text-muted mt-3">Nenhum produto encontrado</h3>
+            <p class="text-muted">Crie seu primeiro produto para começar.</p>
+            <a href="{% url 'raffles:admin_product_create' %}" class="btn btn-primary">
+              <i class="bi bi-plus-circle"></i>
+              Criar Primeiro Produto
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Draw Modal -->
+  <div class="modal fade" id="drawModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Realizar Sorteio</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Tem certeza que deseja realizar o sorteio para este produto?</p>
+          <p class="text-muted">Esta ação não pode ser desfeita.</p>
+
+          <div class="mb-3">
+            <label for="drawSource" class="form-label">Descrição do sorteio:</label>
+            <input type="text" class="form-control" id="drawSource" placeholder="Ex: Sorteio realizado ao vivo no Instagram" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-success" onclick="confirmDraw()">Realizar Sorteio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    let currentProductId = null
+    
+    function drawProduct(productId) {
+      currentProductId = productId
+      new bootstrap.Modal(document.getElementById('drawModal')).show()
+    }
+    
+    function confirmDraw() {
+      const drawSource = document.getElementById('drawSource').value || 'Sorteio realizado pelo administrador'
+    
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = `{% url 'raffles:draw_product' 0 %}`.replace('0', currentProductId)
+    
+      // Get CSRF token from the hidden input or meta tag
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || ''
+    
+      const csrfInput = document.createElement('input')
+      csrfInput.type = 'hidden'
+      csrfInput.name = 'csrfmiddlewaretoken'
+      csrfInput.value = csrfToken
+      form.appendChild(csrfInput)
+    
+      const sourceInput = document.createElement('input')
+      sourceInput.type = 'hidden'
+      sourceInput.name = 'draw_source'
+      sourceInput.value = drawSource
+      form.appendChild(sourceInput)
+    
+      document.body.appendChild(form)
+      form.submit()
+    }
+  </script>
+{% endblock %}

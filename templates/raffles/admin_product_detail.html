@@ -1,0 +1,440 @@
+{% extends 'raffles/base_admin.html' %}
+{% load static %}
+
+{% block title %}
+  {{ product.title }} - Detalhes - Sistema de Cotas
+{% endblock %}
+
+{% block content %}
+  <div class="container-fluid py-4">
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1 class="h2 mb-0">
+            <i class="bi bi-box"></i>
+            {{ product.title }}
+          </h1>
+          <div class="btn-group">
+            <a href="{% url 'raffles:admin_products' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i>
+              Voltar
+            </a>
+            {% if product.status != 'encerrado' %}
+              <a href="{% url 'raffles:admin_product_edit' product.id %}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i>
+                Editar
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Product Info -->
+      <div class="col-lg-4 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Informações do Produto</h5>
+          </div>
+          <div class="card-body">
+            {% if product.image %}
+              <img src="{{ product.image.url }}" class="img-fluid mb-3" alt="{{ product.title }}" />
+            {% endif %}
+
+            <p>
+              <strong>Status:</strong>
+              <span class="badge bg-{% if product.status == 'ativo' %}
+                  
+                  success
+
+                {% elif product.status == 'encerrado' %}
+                  
+                  danger
+
+                {% else %}
+                  
+                  secondary
+
+                {% endif %}">
+                {{ product.get_status_display }}
+              </span>
+            </p>
+
+            <p>
+              <strong>Preço por cota:</strong> {{ product.price_display }}
+            </p>
+            <p>
+              <strong>Total de cotas:</strong> {{ product.total_quotas }}
+            </p>
+
+            {% if product.draw_datetime %}
+              <p>
+                <strong>Data do sorteio:</strong> {{ product.draw_datetime|date:'d/m/Y à\s H:i' }}
+              </p>
+            {% endif %}
+
+            {% if product.drawn_number %}
+              <p>
+                <strong>Número sorteado:</strong>
+                <span class="badge bg-warning fs-6">{{ product.drawn_number }}</span>
+              </p>
+            {% endif %}
+
+            {% if product.draw_source %}
+              <p>
+                <strong>Fonte do sorteio:</strong> {{ product.draw_source }}
+              </p>
+            {% endif %}
+
+            {% if product.description %}
+              <div class="mt-3">
+                <strong>Descrição:</strong>
+                <p class="text-muted">{{ product.description|linebreaks }}</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="col-lg-8 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Estatísticas</h5>
+          </div>
+          <div class="card-body">
+            <div class="row text-center">
+              <div class="col-3">
+                <div class="stats-card">
+                  <div class="stats-number">{{ product.total_quotas }}</div>
+                  <div class="stats-label">Total</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="stats-card">
+                  <div class="stats-number text-success">{{ product.sold_count }}</div>
+                  <div class="stats-label">Vendidas</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="stats-card">
+                  <div class="stats-number text-warning">{{ product.reserved_count }}</div>
+                  <div class="stats-label">Reservadas</div>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="stats-card">
+                  <div class="stats-number text-info">{{ product.available_count }}</div>
+                  <div class="stats-label">Disponíveis</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <div class="d-flex justify-content-between small text-muted mb-2">
+                <span>Progresso das vendas</span>
+                <span>{{ product.progress_percentage }}%</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar bg-success" role="progressbar" style="width: {{ product.progress_percentage }}%"></div>
+              </div>
+            </div>
+
+            <!-- Quota Statistics -->
+            <div class="mt-4">
+              <h6>Distribuição das Cotas</h6>
+              <div class="row">
+                <div class="col-4">
+                  <div class="text-center">
+                    <div class="text-success fw-bold">{{ quota_stats.available }}</div>
+                    <small class="text-muted">Disponíveis</small>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="text-center">
+                    <div class="text-warning fw-bold">{{ quota_stats.reserved }}</div>
+                    <small class="text-muted">Reservadas</small>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="text-center">
+                    <div class="text-primary fw-bold">{{ quota_stats.sold }}</div>
+                    <small class="text-muted">Vendidas</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Winner Information -->
+    {% if winner_info %}
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+              <h5 class="mb-0">
+                <i class="bi bi-trophy-fill me-2"></i>
+                🎉 VENCEDOR DO SORTEIO
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8">
+                  <h4 class="text-warning mb-3">
+                    <i class="bi bi-star-fill me-2"></i>
+                    Parabéns {{ winner_info.winner_name }}!
+                  </h4>
+
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p>
+                        <strong>🏆 Número da Cota Vencedora:</strong>
+                      </p>
+                      <div class="display-4 text-warning fw-bold">{{ winner_info.quota_number }}</div>
+                    </div>
+                    <div class="col-md-6">
+                      <p>
+                        <strong>📋 Informações do Vencedor:</strong>
+                      </p>
+                      <ul class="list-unstyled">
+                        <li>
+                          <i class="bi bi-person me-2"></i><strong>Nome:</strong> {{ winner_info.winner_name }}
+                        </li>
+                        {% if winner_info.winner_email %}
+                          <li>
+                            <i class="bi bi-envelope me-2"></i><strong>Email:</strong> {{ winner_info.winner_email }}
+                          </li>
+                        {% endif %}
+                        {% if winner_info.winner_whatsapp %}
+                          <li>
+                            <i class="bi bi-whatsapp me-2"></i><strong>WhatsApp:</strong> {{ winner_info.winner_whatsapp }}
+                          </li>
+                        {% endif %}
+                        <li>
+                          <i class="bi bi-receipt me-2"></i><strong>Pedido #:</strong> {{ winner_info.order.id }}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4 text-center">
+                  <div class="bg-warning bg-opacity-10 p-4 rounded">
+                    <i class="bi bi-trophy-fill display-1 text-warning"></i>
+                    <h5 class="mt-3">Vencedor Confirmado</h5>
+                    <p class="text-muted small">Sorteio realizado com sucesso</p>
+                  </div>
+                </div>
+              </div>
+
+              {% if product.draw_source %}
+                <div class="mt-3 p-3 bg-light rounded">
+                  <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Fonte do sorteio:</strong> {{ product.draw_source }}
+                  </small>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Ações</h5>
+          </div>
+          <div class="card-body">
+            <div class="btn-group" role="group">
+              {% if product.status == 'ativo' and product.sold_count > 0 and not product.drawn_number %}
+                <button class="btn btn-success" onclick="drawProduct({{ product.id }})">
+                  <i class="bi bi-trophy"></i>
+                  Realizar Sorteio
+                </button>
+              {% endif %}
+
+              {% if product.total_quotas == 0 %}
+                <button class="btn btn-info" onclick="createQuotas({{ product.id }})">
+                  <i class="bi bi-plus-circle"></i>
+                  Criar Cotas
+                </button>
+              {% endif %}
+
+              <a href="/admin/raffles/order/?product__id__exact={{ product.id }}" class="btn btn-outline-primary">
+                <i class="bi bi-cart"></i>
+                Ver Pedidos
+              </a>
+
+              <a href="/admin/raffles/quota/?product__id__exact={{ product.id }}" class="btn btn-outline-secondary">
+                <i class="bi bi-ticket-perforated"></i>
+                Ver Cotas
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Pedidos Recentes</h5>
+          </div>
+          <div class="card-body">
+            {% if orders %}
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Cliente</th>
+                      <th>Quantidade</th>
+                      <th>Status</th>
+                      <th>Valor</th>
+                      <th>Data</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for order in orders %}
+                      <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.full_name }}</td>
+                        <td>{{ order.quantity }} cota{{ order.quantity|pluralize }}</td>
+                        <td>
+                          <span class="badge bg-{% if order.status == 'confirmado' %}
+                              
+                              success
+
+                            {% elif order.status == 'cancelado' %}
+                              
+                              danger
+
+                            {% elif order.status == 'expirado' %}
+                              
+                              secondary
+
+                            {% else %}
+                              
+                              warning
+
+                            {% endif %}">
+                            {{ order.get_status_display }}
+                          </span>
+                        </td>
+                        <td>{{ order.total_price_display }}</td>
+                        <td>{{ order.created_at|date:'d/m/Y H:i' }}</td>
+                        <td>
+                          <a href="{% url 'raffles:admin_order_detail' order.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                          {% if order.status == 'aguardando_confirmacao' %}
+                            <button class="btn btn-sm btn-success" onclick="confirmOrder({{ order.id }})"><i class="bi bi-check"></i></button>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center py-4">
+                <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-2">Nenhum pedido encontrado</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal fade" id="drawModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Realizar Sorteio</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Tem certeza que deseja realizar o sorteio para este produto?</p>
+          <p class="text-muted">Esta ação não pode ser desfeita.</p>
+
+          <div class="mb-3">
+            <label for="drawSource" class="form-label">Descrição do sorteio:</label>
+            <input type="text" class="form-control" id="drawSource" placeholder="Ex: Sorteio realizado ao vivo no Instagram" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-success" onclick="confirmDraw()">Realizar Sorteio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    let currentProductId = {{ product.id }};
+    
+    function drawProduct(productId) {
+      currentProductId = productId;
+      new bootstrap.Modal(document.getElementById('drawModal')).show();
+    }
+    
+    function confirmDraw() {
+      const drawSource = document.getElementById('drawSource').value || 'Sorteio realizado pelo administrador';
+      
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `{% url 'raffles:draw_product' 0 %}`.replace('0', currentProductId);
+      
+      const csrfToken = document.createElement('input');
+      csrfToken.type = 'hidden';
+      csrfToken.name = 'csrfmiddlewaretoken';
+      csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+      form.appendChild(csrfToken);
+      
+      const sourceInput = document.createElement('input');
+      sourceInput.type = 'hidden';
+      sourceInput.name = 'draw_source';
+      sourceInput.value = drawSource;
+      form.appendChild(sourceInput);
+      
+      document.body.appendChild(form);
+      form.submit();
+    }
+    
+    function createQuotas(productId) {
+      if (confirm('Criar cotas para este produto?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `{% url 'raffles:create_quotas' 0 %}`.replace('0', productId);
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        form.appendChild(csrfToken);
+        
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+    
+    function confirmOrder(orderId) {
+      if (confirm('Confirmar este pedido?')) {
+        window.location.href = `{% url 'raffles:confirm_order' 0 %}`.replace('0', orderId);
+      }
+    }
+  </script>
+{% endblock %}

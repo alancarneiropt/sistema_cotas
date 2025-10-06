@@ -1,0 +1,241 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block title %}
+  {{ product.title }} - Sistema de Cotas
+{% endblock %}
+
+{% block extra_css %}
+  <style>
+    .product-image {
+      height: 400px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    
+    .product-info {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .price-display {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #28a745;
+    }
+    
+    .progress-bar {
+      height: 15px;
+      border-radius: 8px;
+    }
+    
+    .stats-card {
+      background: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    
+    .stats-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #007bff;
+    }
+    
+    .stats-label {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    
+    .recent-order {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      border-left: 4px solid #007bff;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="{% url 'raffles:home' %}">Início</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">{{ product.title }}</li>
+      </ol>
+    </nav>
+
+    <div class="row">
+      <!-- Product Image -->
+      <div class="col-lg-5 mb-4">
+        {% if product.image %}
+          <img src="{{ product.image.url }}" class="img-fluid product-image w-100" alt="{{ product.title }}" />
+        {% else %}
+          <div class="product-image bg-light d-flex align-items-center justify-content-center">
+            <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Product Information -->
+      <div class="col-lg-7">
+        <div class="product-info">
+          <h1 class="display-6 fw-bold mb-3">{{ product.title }}</h1>
+
+          {% if product.description %}
+            <div class="mb-4">
+              <h5>Descrição</h5>
+              <p class="text-muted">{{ product.description|linebreaks }}</p>
+            </div>
+          {% endif %}
+
+          <!-- Price -->
+          <div class="mb-4">
+            <div class="price-display">
+              {{ product.price_display }} <small class="text-muted">por cota</small>
+            </div>
+          </div>
+
+          <!-- Progress -->
+          <div class="mb-4">
+            <h5>Progresso das Vendas</h5>
+            <div class="d-flex justify-content-between small text-muted mb-2">
+              <span>{{ product.sold_count }} vendidas</span>
+              <span>{{ product.available_count }} disponíveis</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-success" role="progressbar" style="width: {{ product.progress_percentage }}%">{{ product.progress_percentage }}%</div>
+            </div>
+          </div>
+
+          <!-- Draw Date -->
+          {% if product.draw_datetime %}
+            <div class="alert alert-info mb-4">
+              <h6><i class="bi bi-calendar-event"></i> Data do Sorteio</h6>
+              <p class="mb-0">
+                <strong>{{ product.draw_datetime|date:'d/m/Y à\s H:i' }}</strong>
+              </p>
+            </div>
+          {% endif %}
+
+          <!-- Action Buttons -->
+          <div class="d-grid gap-2">
+            {% if product.available_count > 0 %}
+              <button class="btn btn-primary btn-lg" onclick="selectProduct({{ product.id }})">
+                <i class="bi bi-cart-plus"></i>
+                Comprar Cotas
+              </button>
+            {% else %}
+              <button class="btn btn-secondary btn-lg" disabled>
+                <i class="bi bi-x-circle"></i>
+                Esgotado
+              </button>
+            {% endif %}
+            <a href="{% url 'raffles:home' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i>
+              Voltar aos Produtos
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h3 class="mb-4">Estatísticas</h3>
+      </div>
+
+      <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+          <div class="stats-number">{{ product.total_quotas }}</div>
+          <div class="stats-label">Total de Cotas</div>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+          <div class="stats-number text-success">{{ product.sold_count }}</div>
+          <div class="stats-label">Vendidas</div>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+          <div class="stats-number text-warning">{{ product.reserved_count }}</div>
+          <div class="stats-label">Reservadas</div>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+          <div class="stats-number text-info">{{ product.available_count }}</div>
+          <div class="stats-label">Disponíveis</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders -->
+    {% if recent_orders %}
+      <div class="row mt-5">
+        <div class="col-12">
+          <h3 class="mb-4">Últimas Participações</h3>
+
+          <div class="row">
+            {% for order in recent_orders %}
+              <div class="col-lg-4 col-md-6 mb-3">
+                <div class="recent-order">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <strong>{{ order.full_name }}</strong>
+                    <small class="text-muted">{{ order.created_at|date:'d/m' }}</small>
+                  </div>
+                  <div class="text-muted small">
+                    {{ order.quantity }} cota{{ order.quantity|pluralize }}
+                    {% if order.status == 'confirmado' %}
+                      <span class="badge bg-success ms-2">Confirmado</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Important Information -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <div class="alert alert-warning">
+          <h5><i class="bi bi-info-circle"></i> Informações Importantes</h5>
+          <ul class="mb-0">
+            <li>Os números das cotas são sorteados automaticamente pelo sistema</li>
+            <li>Cada cota representa uma chance de ganhar o produto</li>
+            <li>O sorteio é realizado de forma transparente e auditável</li>
+            <li>Você receberá os números das suas cotas após a confirmação do pagamento</li>
+            <li>Em caso de dúvidas, entre em contato conosco</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    function selectProduct(productId) {
+      // Redireciona para a página inicial com o produto selecionado
+      const url = new URL(window.location.origin + '/')
+      url.searchParams.set('selected_product', productId)
+      window.location.href = url.toString()
+    }
+  </script>
+{% endblock %}
