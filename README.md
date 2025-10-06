@@ -1,7 +1,7 @@
 # Sistema de Cotas/Sorteios em Django
 
 Sistema web completo para venda de cotas de sorteios por produto, com alocação aleatória de números, gerenciamento de pedidos e dashboard administrativo.
-
+teste
 ## 🚀 Características
 
 - **Venda de cotas por produto**: Cada produto tem um número específico de cotas
