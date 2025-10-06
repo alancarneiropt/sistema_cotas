@@ -1,10 +1,13 @@
+# Configuração específica para Easypanel
+# Sistema de Cotas - Porta 8005
+
 version: '3.8'
 
 services:
   sistema-cotas:
     build: .
     ports:
-      - "8005:8000"
+      - "8005:8000"  # Porta externa 8005, interna 8000
     environment:
       - DEBUG=False
       - EASYPANEL=True
@@ -12,6 +15,7 @@ services:
       - DATABASE_URL=sqlite:///app/db.sqlite3
       - TIME_ZONE=Europe/Lisbon
       - LANGUAGE_CODE=pt-br
+      - ALLOWED_HOSTS=*
     volumes:
       - media_data:/app/media
       - logs_data:/app/logs
@@ -26,5 +30,8 @@ services:
 
 volumes:
   media_data:
+    driver: local
   logs_data:
+    driver: local
   static_data:
+    driver: local

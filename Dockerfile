@@ -10,6 +10,7 @@ RUN apt-get update \
         build-essential \
         libpq-dev \
         curl \
+        sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copia e instala dependências Python
@@ -25,16 +26,19 @@ RUN mkdir -p logs media staticfiles
 # Configura variáveis de ambiente
 ENV PYTHONPATH=/app
 ENV DJANGO_SETTINGS_MODULE=sistema_cotas.settings
+ENV DEBUG=False
+ENV EASYPANEL=True
 
-# Coleta arquivos estáticos
-RUN python manage.py collectstatic --noinput
+# Copiar script de inicialização
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Expõe a porta 8000 (interna) - Easypanel mapeará para 8005
 EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8000/ || exit 1
 
-# Comando para produção com Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120", "sistema_cotas.wsgi:application"]
+# Comando para produção com script de inicialização
+ENTRYPOINT ["/app/entrypoint.sh"]

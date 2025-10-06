@@ -22,8 +22,8 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 if os.getenv('EASYPANEL', 'False').lower() == 'true':
     DEBUG = False
     ALLOWED_HOSTS = ['*']  # Easypanel gerencia a segurança
-
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+else:
+    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Application definition
 DJANGO_APPS = [
@@ -36,6 +36,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    'whitenoise.runserver_nostatic',  # WhiteNoise para arquivos estáticos
     'rest_framework',
     'crispy_forms',
     'crispy_bootstrap5',
@@ -49,6 +50,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise middleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
